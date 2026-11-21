@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.2.2",
@@ -35,5 +37,8 @@
     "tailwindcss": "4.3.3",
     "typescript": "^5",
     "vitest": "^4.1.12"
+  },
+  "overrides": {
+    "effect": "^3.22.1"
   }
 }
