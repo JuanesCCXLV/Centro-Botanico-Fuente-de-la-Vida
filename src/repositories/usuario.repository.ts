@@ -9,8 +9,15 @@ const campos = {
 export const usuarioRepository: UsuarioRepo = {
   buscarPorCorreo: (correo) => prisma.usuario.findUnique({ where: { correo }, select: campos }),
   buscarPorId: (id) => prisma.usuario.findUnique({ where: { id }, select: campos }),
-  registrarFallo: async (id, intentosFallidos, bloqueadoHasta) => {
-    await prisma.usuario.update({ where: { id }, data: { intentosFallidos, bloqueadoHasta } });
+  registrarFallo: async (id, maxIntentos, bloquearHasta) => {
+    const { intentosFallidos } = await prisma.usuario.update({
+      where: { id },
+      data: { intentosFallidos: { increment: 1 } },
+      select: { intentosFallidos: true },
+    });
+    if (intentosFallidos >= maxIntentos) {
+      await prisma.usuario.update({ where: { id }, data: { intentosFallidos: 0, bloqueadoHasta: bloquearHasta } });
+    }
   },
   registrarExito: async (id, ahora) => {
     await prisma.usuario.update({

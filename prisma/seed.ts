@@ -11,7 +11,8 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  const correo = process.env.ADMIN_EMAIL;
+  // En minúsculas: el login normaliza el correo antes de buscarlo
+  const correo = process.env.ADMIN_EMAIL?.trim().toLowerCase();
   const clave = process.env.ADMIN_PASSWORD;
   if (!correo || !clave || clave.length < 12) {
     throw new Error("Define ADMIN_EMAIL y ADMIN_PASSWORD (mínimo 12 caracteres)");
