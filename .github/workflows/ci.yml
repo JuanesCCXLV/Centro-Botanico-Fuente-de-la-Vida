@@ -15,6 +15,7 @@ jobs:
         with: { fetch-depth: 0 }
       - uses: actions/setup-node@v4
         with: { node-version: "22", cache: npm }
+        with: { node-version: lts/*, cache: npm }
       - run: npm ci
       - run: npx prisma generate
       - run: npm run lint
