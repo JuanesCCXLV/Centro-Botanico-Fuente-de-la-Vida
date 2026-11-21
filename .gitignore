@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+# Herramientas de asistentes de IA
+.agents/
+.claude/
+.windsurf/
+skills-lock.json
+
+# La plantilla de variables de entorno sí se sube
+!.env.example

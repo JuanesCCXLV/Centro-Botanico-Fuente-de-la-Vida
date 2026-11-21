@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Rol {
+  ADMIN
+}
+
+enum TipoImagen {
+  FRONTAL
+  POSTERIOR
+}
+
+model Usuario {
+  id             String   @id @default(cuid())
+  nombre         String
+  correo         String   @unique
+  hashContrasena String
+  rol            Rol      @default(ADMIN)
+  activo         Boolean  @default(true)
+  creadoEn       DateTime @default(now())
+}
+
+model Categoria {
+  id          Int        @id @default(autoincrement())
+  nombre      String
+  slug        String     @unique
+  descripcion String?
+  orden       Int        @default(0)
+  visible     Boolean    @default(true)
+  productos   Producto[]
+}
+
+model Producto {
+  id                Int              @id @default(autoincrement())
+  nombre            String
+  slug              String           @unique
+  descripcion       String
+  presentacion      String?
+  precioCop         Int
+  categoriaId       Int
+  categoria         Categoria        @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
+  registroSanitario String?
+  visible           Boolean          @default(true)
+  destacado         Boolean          @default(false)
+  creadoEn          DateTime         @default(now())
+  actualizadoEn     DateTime         @updatedAt
+  imagenes          ImagenProducto[]
+}
+
+model ImagenProducto {
+  id               Int        @id @default(autoincrement())
+  productoId       Int
+  producto         Producto   @relation(fields: [productoId], references: [id], onDelete: Cascade)
+  tipo             TipoImagen
+  url              String
+  textoAlternativo String?
+
+  @@unique([productoId, tipo])
+}
+
+model InfoLocal {
+  id            Int      @id @default(1)
+  direccion     String
+  latitud       Float?
+  longitud      Float?
+  telefonos     String[]
+  whatsapp      String
+  correo        String?
+  horarios      String
+  redesSociales Json?
+}

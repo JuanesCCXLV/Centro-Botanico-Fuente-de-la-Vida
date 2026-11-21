@@ -1,0 +1,13 @@
+services:
+  db:
+    image: docker.io/library/postgres:16
+    environment:
+      POSTGRES_USER: tienda
+      POSTGRES_PASSWORD: cambiar-en-local
+      POSTGRES_DB: tienda_dev
+    ports:
+      - "5232:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
