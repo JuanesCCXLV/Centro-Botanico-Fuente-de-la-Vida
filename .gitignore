@@ -49,3 +49,6 @@ skills-lock.json
 
 # La plantilla de variables de entorno sí se sube
 !.env.example
+
+# Imágenes subidas en desarrollo (almacenamiento local)
+/public/uploads/
