@@ -37,6 +37,12 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   poweredByHeader: false,
+  experimental: {
+    // Dos imágenes de hasta 5 MB más el resto del formulario. En el navegador se reducen antes
+    // de enviarlas (Vercel limita el cuerpo de la petición a 4.5 MB), pero el servidor no depende de eso.
+    serverActions: { bodySizeLimit: "11mb" },
+    proxyClientMaxBodySize: "11mb",
+  },
   images: {
     remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com", pathname: "/**" }],
   },
