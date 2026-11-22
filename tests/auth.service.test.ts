@@ -1,9 +1,21 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { hash } from "@node-rs/argon2";
-import { BLOQUEO_MS, MAX_INTENTOS, SESION_MS, crearAuthService, hashToken, type UsuarioAuth } from "@/services/auth.service";
+import {
+  BLOQUEO_MS,
+  MAX_FALLOS_IP,
+  MAX_INTENTOS,
+  SESION_MS,
+  VENTANA_IP_MS,
+  crearAuthService,
+  hashToken,
+  type TipoEvento,
+  type UsuarioAuth,
+} from "@/services/auth.service";
 
 const CLAVE = "clave-de-prueba-larga-1";
+const CLAVE_NUEVA = "otra-clave-bien-larga-2";
 const CORREO = "admin@ejemplo.local";
+const IP = "203.0.113.7";
 let HASH: string;
 
 beforeAll(async () => {
@@ -16,6 +28,8 @@ function montar() {
     ["u1", { id: "u1", nombre: "Admin", correo: CORREO, hashContrasena: HASH, activo: true, intentosFallidos: 0, bloqueadoHasta: null }],
   ]);
   const sesiones = new Map<string, { usuarioId: string; expiraEn: Date }>();
+  const eventos: { tipo: TipoEvento; usuarioId: string | null; ip: string | null; creadoEn: Date }[] = [];
+
   const servicio = crearAuthService({
     ahora: () => reloj,
     usuarios: {
@@ -29,6 +43,9 @@ function montar() {
       registrarExito: async (id) => {
         Object.assign(usuarios.get(id)!, { intentosFallidos: 0, bloqueadoHasta: null });
       },
+      actualizarHash: async (id, h) => {
+        usuarios.get(id)!.hashContrasena = h;
+      },
     },
     sesiones: {
       crear: async (usuarioId, tokenHash, expiraEn) => { sesiones.set(tokenHash, { usuarioId, expiraEn }); },
@@ -38,24 +55,39 @@ function montar() {
         for (const [h, s] of sesiones) if (s.usuarioId === id) sesiones.delete(h);
       },
     },
+    eventos: {
+      registrar: async (e) => {
+        eventos.push({ tipo: e.tipo, usuarioId: e.usuarioId ?? null, ip: e.ip ?? null, creadoEn: reloj });
+      },
+      contarPorIpDesde: async (tipo, ip, desde) =>
+        eventos.filter((e) => e.tipo === tipo && e.ip === ip && e.creadoEn >= desde).length,
+    },
   });
-  return { servicio, usuarios, sesiones, avanzar: (ms: number) => { reloj = new Date(reloj.getTime() + ms); } };
+  return { servicio, usuarios, sesiones, eventos, avanzar: (ms: number) => { reloj = new Date(reloj.getTime() + ms); } };
 }
 
-describe("AuthService", () => {
-  it("inicia sesión con datos válidos y guarda solo el hash del token", async () => {
-    const { servicio, sesiones } = montar();
-    const r = await servicio.login(CORREO, CLAVE);
+async function loginOk(servicio: ReturnType<typeof montar>["servicio"], clave = CLAVE) {
+  const r = await servicio.login(CORREO, clave);
+  if (!r.ok) throw new Error("login falló");
+  return r;
+}
+
+describe("AuthService · login", () => {
+  it("inicia sesión con datos válidos, guarda solo el hash del token y registra el evento", async () => {
+    const { servicio, sesiones, eventos } = montar();
+    const r = await servicio.login(CORREO, CLAVE, { ip: IP });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(sesiones.has(r.token)).toBe(false);
     expect(sesiones.has(hashToken(r.token))).toBe(true);
+    expect(eventos).toMatchObject([{ tipo: "LOGIN_EXITOSO", usuarioId: "u1", ip: IP }]);
   });
 
   it("rechaza clave incorrecta y correo inexistente con el mismo resultado", async () => {
-    const { servicio } = montar();
+    const { servicio, eventos } = montar();
     expect(await servicio.login(CORREO, "incorrecta")).toEqual({ ok: false });
     expect(await servicio.login("nadie@ejemplo.local", CLAVE)).toEqual({ ok: false });
+    expect(eventos.map((e) => e.tipo)).toEqual(["LOGIN_FALLIDO", "LOGIN_FALLIDO"]);
   });
 
   it("bloquea tras varios fallos, incluso con la clave correcta, y desbloquea con el tiempo", async () => {
@@ -66,20 +98,6 @@ describe("AuthService", () => {
     expect((await servicio.login(CORREO, CLAVE)).ok).toBe(true);
   });
 
-  it("valida la sesión, la invalida al cerrar y la rechaza si expiró", async () => {
-    const { servicio, avanzar } = montar();
-    const r = await servicio.login(CORREO, CLAVE);
-    if (!r.ok) throw new Error("login falló");
-    expect((await servicio.validarSesion(r.token))?.correo).toBe(CORREO);
-    await servicio.cerrarSesion(r.token);
-    expect(await servicio.validarSesion(r.token)).toBeNull();
-
-    const r2 = await servicio.login(CORREO, CLAVE);
-    if (!r2.ok) throw new Error("login falló");
-    avanzar(SESION_MS + 1000);
-    expect(await servicio.validarSesion(r2.token)).toBeNull();
-  });
-
   it("cuenta los fallos simultáneos y bloquea igual", async () => {
     const { servicio, usuarios } = montar();
     await Promise.all(Array.from({ length: MAX_INTENTOS }, () => servicio.login(CORREO, "incorrecta")));
@@ -87,9 +105,67 @@ describe("AuthService", () => {
     expect((await servicio.login(CORREO, CLAVE)).ok).toBe(false);
   });
 
+  it("limita por IP aunque se prueben correos distintos (CS-14) y libera al pasar la ventana", async () => {
+    const { servicio, eventos, avanzar } = montar();
+    for (let i = 0; i < MAX_FALLOS_IP; i++) await servicio.login(`otro${i}@ejemplo.local`, "x", { ip: IP });
+    expect((await servicio.login(CORREO, CLAVE, { ip: IP })).ok).toBe(false);
+    expect(eventos.at(-1)?.tipo).toBe("LOGIN_LIMITADO");
+    // Otra IP no se ve afectada
+    expect((await servicio.login(CORREO, CLAVE, { ip: "198.51.100.1" })).ok).toBe(true);
+    avanzar(VENTANA_IP_MS + 1000);
+    expect((await servicio.login(CORREO, CLAVE, { ip: IP })).ok).toBe(true);
+  });
+});
+
+describe("AuthService · sesiones", () => {
+  it("valida la sesión, la invalida al cerrar y la rechaza si expiró", async () => {
+    const { servicio, eventos, avanzar } = montar();
+    const r = await loginOk(servicio);
+    expect((await servicio.validarSesion(r.token))?.correo).toBe(CORREO);
+    await servicio.cerrarSesion(r.token);
+    expect(await servicio.validarSesion(r.token)).toBeNull();
+    expect(eventos.at(-1)?.tipo).toBe("LOGOUT");
+
+    const r2 = await loginOk(servicio);
+    avanzar(SESION_MS + 1000);
+    expect(await servicio.validarSesion(r2.token)).toBeNull();
+  });
+
   it("no valida tokens vacíos o inventados", async () => {
     const { servicio } = montar();
     expect(await servicio.validarSesion(undefined)).toBeNull();
     expect(await servicio.validarSesion("token-inventado")).toBeNull();
+  });
+});
+
+describe("AuthService · cambiar contraseña (HU-11, CP-21)", () => {
+  it("exige la contraseña actual", async () => {
+    const { servicio } = montar();
+    expect(await servicio.cambiarContrasena("u1", "incorrecta", CLAVE_NUEVA)).toEqual({
+      ok: false,
+      error: "CLAVE_ACTUAL_INCORRECTA",
+    });
+  });
+
+  it("rechaza claves nuevas cortas", async () => {
+    const { servicio } = montar();
+    expect(await servicio.cambiarContrasena("u1", CLAVE, "corta")).toEqual({ ok: false, error: "CLAVE_INVALIDA" });
+  });
+
+  it("cambia la clave, cierra las demás sesiones y entrega una sesión nueva", async () => {
+    const { servicio, eventos } = montar();
+    const otroDispositivo = await loginOk(servicio);
+    const actual = await loginOk(servicio);
+
+    const r = await servicio.cambiarContrasena("u1", CLAVE, CLAVE_NUEVA);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+
+    expect(await servicio.validarSesion(otroDispositivo.token)).toBeNull();
+    expect(await servicio.validarSesion(actual.token)).toBeNull();
+    expect(await servicio.validarSesion(r.token)).not.toBeNull();
+    expect((await servicio.login(CORREO, CLAVE)).ok).toBe(false);
+    expect((await servicio.login(CORREO, CLAVE_NUEVA)).ok).toBe(true);
+    expect(eventos.some((e) => e.tipo === "CAMBIO_CONTRASENA")).toBe(true);
   });
 });

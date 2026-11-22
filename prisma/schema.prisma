@@ -11,6 +11,14 @@ enum Rol {
   ADMIN
 }
 
+enum TipoEvento {
+  LOGIN_EXITOSO
+  LOGIN_FALLIDO
+  LOGIN_LIMITADO
+  LOGOUT
+  CAMBIO_CONTRASENA
+}
+
 enum TipoImagen {
   FRONTAL
   POSTERIOR
@@ -27,7 +35,8 @@ model Usuario {
   intentosFallidos Int @default(0)
   bloqueadoHasta DateTime?
   ultimoLoginEn  DateTime?  @map("ultimoLoginEN")
-  sesiones Sesion[] 
+  sesiones Sesion[]
+  eventos  Evento[]
 }
 
 model Categoria {
@@ -46,6 +55,7 @@ model Producto {
   slug              String           @unique
   descripcion       String
   presentacion      String?
+  usoSugerido       String?
   precioCop         Int
   categoriaId       Int
   categoria         Categoria        @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
@@ -63,6 +73,8 @@ model ImagenProducto {
   producto         Producto   @relation(fields: [productoId], references: [id], onDelete: Cascade)
   tipo             TipoImagen
   url              String
+  // Identificador en el almacenamiento de imágenes; se usa para borrar el archivo al reemplazarla (CP-19)
+  idPublico        String
   textoAlternativo String?
 
   @@unique([productoId, tipo])
@@ -91,4 +103,17 @@ model Sesion {
 
   @@index([usuarioId])
   @@index([expiraEn])
+}
+
+// Registro de auditoría (CS-11). Nunca guarda contraseñas, tokens ni correos intentados.
+model Evento {
+  id        String     @id @default(cuid())
+  tipo      TipoEvento
+  usuarioId String?
+  usuario   Usuario?   @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+  ip        String?
+  creadoEn  DateTime   @default(now())
+
+  @@index([tipo, ip, creadoEn])
+  @@index([usuarioId, creadoEn])
 }
