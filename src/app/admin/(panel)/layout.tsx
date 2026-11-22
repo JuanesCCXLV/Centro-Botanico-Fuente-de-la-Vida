@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
 import { cerrarSesion } from "@/app/admin/acciones-auth";
@@ -26,9 +27,13 @@ async function MarcoPanel({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <header className="flex items-center justify-between border-b border-zinc-200 bg-green-900 px-6 py-3 text-white">
-        <span className="font-semibold">Centro Botánico · Administración</span>
+        <Link href="/admin" className="font-semibold">
+          Centro Botánico · Administración
+        </Link>
         <div className="flex items-center gap-4 text-sm">
-          <span>{admin.nombre}</span>
+          <Link href="/admin/cuenta" className="hover:underline">
+            {admin.nombre}
+          </Link>
           <form action={cerrarSesion}>
             <button type="submit" className="rounded-md border border-white/40 px-3 py-1 hover:bg-white/10">
               Cerrar sesión

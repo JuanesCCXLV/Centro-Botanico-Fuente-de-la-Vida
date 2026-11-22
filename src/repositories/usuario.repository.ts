@@ -25,4 +25,7 @@ export const usuarioRepository: UsuarioRepo = {
       data: { intentosFallidos: 0, bloqueadoHasta: null, ultimoLoginEn: ahora },
     });
   },
+  actualizarHash: async (id, hashContrasena) => {
+    await prisma.usuario.update({ where: { id }, data: { hashContrasena } });
+  },
 };
