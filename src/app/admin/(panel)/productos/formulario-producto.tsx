@@ -19,6 +19,8 @@ type ProductoInicial = {
   imagenes: { tipo: "FRONTAL" | "POSTERIOR"; url: string }[];
 };
 
+type EstadoConIntento = EstadoFormularioProducto & { intento?: number };
+
 type Props = {
   accion: (estado: EstadoFormularioProducto, formData: FormData) => Promise<EstadoFormularioProducto>;
   categorias: Categoria[];
@@ -117,11 +119,8 @@ function CampoImagen({
 export function FormularioProducto({ accion, categorias, producto }: Props) {
   // Envoltura en el cliente para contar los envíos: tras cada intento se reinician
   // las vistas previas, porque React vacía los campos de archivo al terminar la acción.
-  const [estado, enviar, pendiente] = useActionState(
-    async (previo: EstadoFormularioProducto & { intento?: number }, formData: FormData) => ({
-      ...(await accion(previo, formData)),
-      intento: (previo.intento ?? 0) + 1,
-    }),
+  const [estado, enviar, pendiente] = useActionState<EstadoConIntento, FormData>(
+    async (previo, formData) => ({ ...(await accion(previo, formData)), intento: (previo.intento ?? 0) + 1 }),
     {},
   );
   const e = estado.errores ?? {};
