@@ -7,9 +7,26 @@ on:
 jobs:
   verificar:
     runs-on: ubuntu-latest
+    services:
+      # Base de datos desechable: next build prerenderiza el catálogo y necesita consultarla
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
-      # Valor ficticio: solo para que Prisma pueda generar el cliente
+      # Valores ficticios solo para CI
       DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
+      SITE_URL: "https://ejemplo.invalid"
+      ADMIN_EMAIL: "admin@ejemplo.invalid"
+      ADMIN_PASSWORD: "clave-solo-para-ci-123"
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
@@ -20,6 +37,11 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+      - name: Migraciones y semilla sobre la base de prueba
+        run: npx prisma migrate deploy && npx prisma db seed
+      - name: Verificar que el esquema y las migraciones coinciden
+        run: npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
+      - run: npm run build
       - run: npm audit --audit-level=high
       - uses: gitleaks/gitleaks-action@v2
         env:
