@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { TAG_CATALOGO } from "@/lib/catalogo-tags";
 import { redirect } from "next/navigation";
 import { obtenerIp } from "@/lib/ip";
 import { categoriaService } from "@/lib/servicios-panel";
@@ -31,6 +32,7 @@ async function guardar(formData: FormData, id?: number): Promise<EstadoFormulari
       : await categoriaService.actualizar(id, lectura.datos, ctx);
   if (!r.ok) return { errores: r.errores, valores };
 
+  updateTag(TAG_CATALOGO);
   revalidatePath(RUTA_LISTA);
   redirect(RUTA_LISTA);
 }
@@ -46,6 +48,7 @@ export async function actualizarCategoria(id: number, _p: EstadoFormularioCatego
 export async function cambiarVisibilidadCategoria(id: number, visible: boolean): Promise<void> {
   const admin = await requireAdmin();
   await categoriaService.cambiarVisibilidad(id, visible, { usuarioId: admin.id, ip: await obtenerIp() });
+  updateTag(TAG_CATALOGO);
   revalidatePath(RUTA_LISTA);
 }
 
@@ -60,6 +63,7 @@ export async function eliminarCategoria(id: number): Promise<{ error?: string }>
     }
     return { error: "La categoría ya no existe." };
   }
+  updateTag(TAG_CATALOGO);
   revalidatePath(RUTA_LISTA);
   return {};
 }

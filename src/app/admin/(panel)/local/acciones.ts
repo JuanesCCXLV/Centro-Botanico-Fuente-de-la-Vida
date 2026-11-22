@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { updateTag } from "next/cache";
+import { TAG_CATALOGO } from "@/lib/catalogo-tags";
 import { obtenerIp } from "@/lib/ip";
 import { infoLocalService } from "@/lib/servicios-panel";
 import { requireAdmin } from "@/lib/sesion";
@@ -18,6 +19,6 @@ export async function guardarInfoLocal(_p: EstadoFormularioLocal, formData: Form
   if (!lectura.ok) return { errores: lectura.errores, valores };
 
   await infoLocalService.guardar(lectura.datos, { usuarioId: admin.id, ip: await obtenerIp() });
-  revalidatePath("/", "layout");
+  updateTag(TAG_CATALOGO);
   return { exito: "Información del local actualizada.", valores };
 }

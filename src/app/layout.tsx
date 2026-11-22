@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { env } from "@/lib/env";
+import { NOMBRE_SITIO } from "@/lib/seo";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,8 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Centro Botánico Fuente de la Vida",
-  description: "Tienda de productos naturistas en Cali, barrio Colseguros.",
+  metadataBase: new URL(env.SITE_URL),
+  title: { default: NOMBRE_SITIO, template: `%s | ${NOMBRE_SITIO}` },
+  description:
+    "Tienda de productos naturistas en Cali, barrio Colseguros. Consulta el catálogo con precios y pide por WhatsApp.",
+  openGraph: { siteName: NOMBRE_SITIO, locale: "es_CO", type: "website" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

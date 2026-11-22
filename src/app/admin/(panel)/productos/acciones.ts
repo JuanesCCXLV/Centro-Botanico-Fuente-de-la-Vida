@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { TAG_CATALOGO } from "@/lib/catalogo-tags";
 import { redirect } from "next/navigation";
 import { obtenerIp } from "@/lib/ip";
 import { productoService } from "@/lib/productos";
@@ -55,6 +56,7 @@ async function guardar(formData: FormData, id?: number): Promise<EstadoFormulari
   }
   if (!resultado.ok) return { errores: resultado.errores, valores };
 
+  updateTag(TAG_CATALOGO);
   revalidatePath(RUTA_LISTA);
   redirect(RUTA_LISTA);
 }
@@ -77,11 +79,13 @@ export async function actualizarProducto(
 export async function cambiarVisibilidadProducto(id: number, visible: boolean): Promise<void> {
   const admin = await requireAdmin();
   await productoService.cambiarVisibilidad(id, visible, { usuarioId: admin.id, ip: await obtenerIp() });
+  updateTag(TAG_CATALOGO);
   revalidatePath(RUTA_LISTA);
 }
 
 export async function eliminarProducto(id: number): Promise<void> {
   const admin = await requireAdmin();
   await productoService.eliminar(id, { usuarioId: admin.id, ip: await obtenerIp() });
+  updateTag(TAG_CATALOGO);
   revalidatePath(RUTA_LISTA);
 }
