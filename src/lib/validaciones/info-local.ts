@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { leerFormulario, textoObligatorio, textoOpcional } from "./comunes";
+import { leerFormulario, textoObligatorio } from "./comunes";
 
 /** Hosts permitidos por red social: evita enlaces a otros sitios o "javascript:" (CS-05, CS-15). */
 const REDES = {
