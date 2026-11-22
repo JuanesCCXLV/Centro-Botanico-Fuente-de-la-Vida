@@ -55,6 +55,7 @@ model Producto {
   slug              String           @unique
   descripcion       String
   presentacion      String?
+  usoSugerido       String?
   precioCop         Int
   categoriaId       Int
   categoria         Categoria        @relation(fields: [categoriaId], references: [id], onDelete: Restrict)
@@ -72,6 +73,8 @@ model ImagenProducto {
   producto         Producto   @relation(fields: [productoId], references: [id], onDelete: Cascade)
   tipo             TipoImagen
   url              String
+  // Identificador en el almacenamiento de imágenes; se usa para borrar el archivo al reemplazarla (CP-19)
+  idPublico        String
   textoAlternativo String?
 
   @@unique([productoId, tipo])
