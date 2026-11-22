@@ -10,6 +10,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+const MENU = [
+  { href: "/admin", texto: "Inicio" },
+  { href: "/admin/productos", texto: "Productos" },
+  { href: "/admin/cuenta", texto: "Mi cuenta" },
+];
+
 // Con cacheComponents, leer cookies() fuera de <Suspense> es un error de compilación.
 export default function LayoutPanel({ children }: { children: ReactNode }) {
   return (
@@ -31,7 +37,7 @@ async function MarcoPanel({ children }: { children: ReactNode }) {
           Centro Botánico · Administración
         </Link>
         <div className="flex items-center gap-4 text-sm">
-          <Link href="/admin/cuenta" className="hover:underline">
+          <Link href="/admin/cuenta" className="hidden hover:underline sm:inline">
             {admin.nombre}
           </Link>
           <form action={cerrarSesion}>
@@ -41,7 +47,23 @@ async function MarcoPanel({ children }: { children: ReactNode }) {
           </form>
         </div>
       </header>
-      <div className="flex-1">{children}</div>
+      <div className="flex flex-1 flex-col md:flex-row">
+        <nav aria-label="Menú del panel" className="border-b border-zinc-200 bg-zinc-50 md:w-52 md:border-b-0 md:border-r">
+          <ul className="flex gap-1 overflow-x-auto p-2 md:flex-col md:p-4">
+            {MENU.map((item) => (
+              <li key={item.href}>
+                <Link
+                  href={item.href}
+                  className="block whitespace-nowrap rounded-md px-3 py-2 text-sm hover:bg-green-100 hover:text-green-900"
+                >
+                  {item.texto}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div className="flex-1">{children}</div>
+      </div>
     </div>
   );
 }

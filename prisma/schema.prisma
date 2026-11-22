@@ -17,6 +17,10 @@ enum TipoEvento {
   LOGIN_LIMITADO
   LOGOUT
   CAMBIO_CONTRASENA
+  PRODUCTO_CREADO
+  PRODUCTO_EDITADO
+  PRODUCTO_VISIBILIDAD
+  PRODUCTO_ELIMINADO
 }
 
 enum TipoImagen {
@@ -112,6 +116,8 @@ model Evento {
   usuarioId String?
   usuario   Usuario?   @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
   ip        String?
+  // Recurso afectado, por ejemplo "producto:12"
+  recurso   String?
   creadoEn  DateTime   @default(now())
 
   @@index([tipo, ip, creadoEn])

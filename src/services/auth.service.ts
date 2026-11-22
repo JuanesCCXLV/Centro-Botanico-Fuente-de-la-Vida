@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from "node:crypto";
 import { hash as argonHash, verify as argonVerify } from "@node-rs/argon2";
+import type { Contexto, EventoRepo } from "./eventos";
 
 export const MAX_INTENTOS = 5;
 export const BLOQUEO_MS = 15 * 60 * 1000;
@@ -39,15 +40,7 @@ export interface SesionRepo {
   eliminarDeUsuario(usuarioId: string): Promise<void>;
 }
 
-export type TipoEvento = "LOGIN_EXITOSO" | "LOGIN_FALLIDO" | "LOGIN_LIMITADO" | "LOGOUT" | "CAMBIO_CONTRASENA";
-
-export interface EventoRepo {
-  registrar(evento: { tipo: TipoEvento; usuarioId?: string | null; ip?: string | null }): Promise<void>;
-  contarPorIpDesde(tipo: TipoEvento, ip: string, desde: Date): Promise<number>;
-}
-
-/** Datos de la petición que el servicio usa para auditoría y límites. */
-export type Contexto = { ip?: string | null };
+export type { Contexto, EventoRepo, TipoEvento } from "./eventos";
 
 export type UsuarioPublico = { id: string; nombre: string; correo: string };
 export type SesionNueva = { token: string; expiraEn: Date };
