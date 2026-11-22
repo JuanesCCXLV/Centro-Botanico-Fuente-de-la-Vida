@@ -76,7 +76,7 @@ async function TablaCategorias() {
         </tbody>
       </table>
       <p className="border-t border-zinc-200 bg-zinc-50 px-4 py-2 text-xs text-zinc-500">
-        Ocultar una categoría la quita del menú del catálogo. Para eliminarla, primero mueve o elimina sus productos.
+        Ocultar una categoría la quita del catálogo junto con sus productos. Para eliminarla, primero mueve o elimina sus productos.
       </p>
     </div>
   );
