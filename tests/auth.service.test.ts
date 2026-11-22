@@ -21,8 +21,10 @@ function montar() {
     usuarios: {
       buscarPorCorreo: async (c) => [...usuarios.values()].find((u) => u.correo === c) ?? null,
       buscarPorId: async (id) => usuarios.get(id) ?? null,
-      registrarFallo: async (id, intentos, bloqueadoHasta) => {
-        Object.assign(usuarios.get(id)!, { intentosFallidos: intentos, bloqueadoHasta });
+      registrarFallo: async (id, maxIntentos, bloquearHasta) => {
+        const u = usuarios.get(id)!;
+        u.intentosFallidos += 1;
+        if (u.intentosFallidos >= maxIntentos) Object.assign(u, { intentosFallidos: 0, bloqueadoHasta: bloquearHasta });
       },
       registrarExito: async (id) => {
         Object.assign(usuarios.get(id)!, { intentosFallidos: 0, bloqueadoHasta: null });
@@ -76,6 +78,13 @@ describe("AuthService", () => {
     if (!r2.ok) throw new Error("login falló");
     avanzar(SESION_MS + 1000);
     expect(await servicio.validarSesion(r2.token)).toBeNull();
+  });
+
+  it("cuenta los fallos simultáneos y bloquea igual", async () => {
+    const { servicio, usuarios } = montar();
+    await Promise.all(Array.from({ length: MAX_INTENTOS }, () => servicio.login(CORREO, "incorrecta")));
+    expect(usuarios.get("u1")!.bloqueadoHasta).not.toBeNull();
+    expect((await servicio.login(CORREO, CLAVE)).ok).toBe(false);
   });
 
   it("no valida tokens vacíos o inventados", async () => {

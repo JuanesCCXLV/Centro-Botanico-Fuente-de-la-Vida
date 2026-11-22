@@ -19,7 +19,11 @@ export interface UsuarioAuth {
 export interface UsuarioRepo {
   buscarPorCorreo(correo: string): Promise<UsuarioAuth | null>;
   buscarPorId(id: string): Promise<UsuarioAuth | null>;
-  registrarFallo(id: string, intentos: number, bloqueadoHasta: Date | null): Promise<void>;
+  /**
+   * Suma un intento fallido de forma atómica. Si el total llega a maxIntentos,
+   * reinicia el contador y bloquea la cuenta hasta `bloquearHasta`.
+   */
+  registrarFallo(id: string, maxIntentos: number, bloquearHasta: Date): Promise<void>;
   registrarExito(id: string, ahora: Date): Promise<void>;
 }
 
@@ -59,13 +63,8 @@ export function crearAuthService(deps: {
 
     const valida = await argonVerify(usuario.hashContrasena, clave).catch(() => false);
     if (!valida) {
-      const intentos = usuario.intentosFallidos + 1;
-      const bloquear = intentos >= MAX_INTENTOS;
-      await deps.usuarios.registrarFallo(
-        usuario.id,
-        bloquear ? 0 : intentos,
-        bloquear ? new Date(ahoraDt.getTime() + BLOQUEO_MS) : null,
-      );
+      // El conteo se hace en la base de datos para que intentos simultáneos no se pierdan
+      await deps.usuarios.registrarFallo(usuario.id, MAX_INTENTOS, new Date(ahoraDt.getTime() + BLOQUEO_MS));
       return { ok: false };
     }
 

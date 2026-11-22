@@ -1,40 +1,48 @@
-<<<<<<< HEAD
-# Centro-Botanico-Fuente-de-la-Vida
-=======
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Centro Botánico Fuente de la Vida
 
-## Getting Started
+Sitio web de la tienda naturista Centro Botánico Fuente de la Vida (Cali): catálogo público con pedidos por WhatsApp y panel de administración.
 
-First, run the development server:
+**Stack:** Next.js 16 (App Router) · TypeScript · Tailwind CSS 4 · Prisma 7 + PostgreSQL · Zod · argon2.
+
+## Requisitos
+
+- Node.js 22 (ver `.nvmrc`)
+- Podman con `podman-compose` (o Docker con `docker compose`)
+
+## Puesta en marcha local
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm ci
+cp .env.example .env            # luego cambia ADMIN_EMAIL y ADMIN_PASSWORD
+podman-compose up -d            # PostgreSQL en localhost:5232
+
+# Esperar a que Postgres acepte conexiones
+until podman exec centro-botanico-fuente-de-la-vida_db_1 pg_isready -U tienda; do sleep 1; done
+
+npx prisma migrate deploy       # crea las tablas
+npx prisma db seed              # administrador + datos de ejemplo
+npm run dev                     # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+El panel está en `/admin` y el ingreso en `/admin/login`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Verificación
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint && npm run typecheck && npm test
+```
 
-## Learn More
+La integración continua (GitHub Actions) ejecuta lo mismo, más `npm audit` y gitleaks.
 
-To learn more about Next.js, take a look at the following resources:
+## Arquitectura
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Monolito modular por capas; cada capa solo llama a la inmediatamente inferior:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Capa | Ubicación |
+| --- | --- |
+| Presentación y Server Actions | `src/app/` |
+| Servicios (reglas de negocio) | `src/services/` |
+| Acceso a datos (Prisma) | `src/repositories/` |
+| Infraestructura (sesión, entorno, utilidades) | `src/lib/` |
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
->>>>>>> dd0df69 (Initial commit from Create Next App)
+La autorización se verifica siempre en el servidor con `requireAdmin()` (`src/lib/sesion.ts`) en cada página y Server Action del panel. `src/proxy.ts` solo hace una redirección optimista cuando no hay cookie de sesión.
