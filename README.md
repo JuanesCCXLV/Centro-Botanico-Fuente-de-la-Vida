@@ -26,6 +26,14 @@ npm run dev                     # http://localhost:3000
 
 El panel está en `/admin` y el ingreso en `/admin/login`.
 
+**Después de cada `git pull`** que traiga cambios en `prisma/`, ejecuta:
+
+```bash
+npm run db:update   # aplica migraciones y regenera el cliente de Prisma
+```
+
+y reinicia `npm run dev`.
+
 ## Verificación
 
 ```bash
