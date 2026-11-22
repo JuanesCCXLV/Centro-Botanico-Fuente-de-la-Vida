@@ -9,7 +9,12 @@ export type TipoEvento =
   | "PRODUCTO_CREADO"
   | "PRODUCTO_EDITADO"
   | "PRODUCTO_VISIBILIDAD"
-  | "PRODUCTO_ELIMINADO";
+  | "PRODUCTO_ELIMINADO"
+  | "CATEGORIA_CREADA"
+  | "CATEGORIA_EDITADA"
+  | "CATEGORIA_VISIBILIDAD"
+  | "CATEGORIA_ELIMINADA"
+  | "INFO_LOCAL_EDITADA";
 
 export interface EventoRepo {
   registrar(evento: {

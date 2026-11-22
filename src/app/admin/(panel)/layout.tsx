@@ -13,6 +13,8 @@ export const metadata: Metadata = {
 const MENU = [
   { href: "/admin", texto: "Inicio" },
   { href: "/admin/productos", texto: "Productos" },
+  { href: "/admin/categorias", texto: "Categorías" },
+  { href: "/admin/local", texto: "Información del local" },
   { href: "/admin/cuenta", texto: "Mi cuenta" },
 ];
 

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { productoService } from "@/lib/productos";
 import { requireAdmin } from "@/lib/sesion";
@@ -19,7 +20,15 @@ async function Formulario() {
   await requireAdmin();
   const categorias = await productoService.listarCategorias();
   if (categorias.length === 0) {
-    return <p className="text-zinc-600">Primero crea al menos una categoría.</p>;
+    return (
+      <p className="text-zinc-600">
+        Primero crea al menos una categoría en{" "}
+        <Link href="/admin/categorias/nueva" className="text-green-800 underline">
+          Categorías
+        </Link>
+        .
+      </p>
+    );
   }
   return <FormularioProducto accion={crearProducto} categorias={categorias} />;
 }
