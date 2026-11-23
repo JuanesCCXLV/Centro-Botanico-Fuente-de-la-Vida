@@ -42,6 +42,21 @@ jobs:
       - name: Verificar que el esquema y las migraciones coinciden
         run: npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
       - run: npm run build
+      - name: Prueba de respaldo y restauración (CS-16)
+        env:
+          ORIGEN_URL: ${{ env.DATABASE_URL }}
+          RESPALDO_CLAVE: clave-de-prueba-solo-para-ci
+        run: |
+          scripts/respaldo.sh /tmp/respaldos
+          # Restaura el archivo cifrado en una base nueva y comprueba que coincide con el origen
+          docker run --rm --network host postgres:16 psql "$DATABASE_URL" -c "CREATE DATABASE restaurada"
+          DESTINO_URL="${DATABASE_URL%/*}/restaurada" CONFIRMAR=RESTAURAR scripts/restaurar.sh /tmp/respaldos/*.dump.gpg
+          ORIGEN=$(docker run --rm --network host postgres:16 psql "$DATABASE_URL" -Atc 'SELECT count(*) FROM "Producto"')
+          COPIA=$(docker run --rm --network host postgres:16 psql "${DATABASE_URL%/*}/restaurada" -Atc 'SELECT count(*) FROM "Producto"')
+          echo "Productos en origen: $ORIGEN · en la copia restaurada: $COPIA"
+          [ "$ORIGEN" = "$COPIA" ]
+          # Con una clave equivocada no se puede descifrar
+          ! RESPALDO_CLAVE=otra-clave DESTINO_URL="${DATABASE_URL%/*}/restaurada" CONFIRMAR=RESTAURAR scripts/restaurar.sh /tmp/respaldos/*.dump.gpg
       - name: Instalar Chromium para Playwright
         run: npx playwright install --with-deps chromium
       - name: Pruebas de punta a punta

@@ -1,0 +1,53 @@
+name: Respaldo diario de la base de datos
+
+# RNF-08: copia automática diaria, verificada restaurándola, cifrada y guardada 30 días.
+# Configuración en docs/respaldos.md (secretos RESPALDO_DATABASE_URL y RESPALDO_CLAVE).
+on:
+  schedule:
+    - cron: "41 7 * * *" # 2:41 a. m. hora de Colombia
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: respaldo
+  cancel-in-progress: false
+
+jobs:
+  respaldo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Comprobar configuración
+        id: config
+        env:
+          ORIGEN_URL: ${{ secrets.RESPALDO_DATABASE_URL }}
+          RESPALDO_CLAVE: ${{ secrets.RESPALDO_CLAVE }}
+        run: |
+          if [ -z "$ORIGEN_URL" ] || [ -z "$RESPALDO_CLAVE" ]; then
+            echo "::notice::Respaldo omitido: faltan los secretos RESPALDO_DATABASE_URL o RESPALDO_CLAVE (ver docs/respaldos.md)."
+            echo "activo=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "activo=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.config.outputs.activo == 'true'
+
+      - name: Volcar, verificar y cifrar
+        id: respaldo
+        if: steps.config.outputs.activo == 'true'
+        env:
+          ORIGEN_URL: ${{ secrets.RESPALDO_DATABASE_URL }}
+          RESPALDO_CLAVE: ${{ secrets.RESPALDO_CLAVE }}
+        run: scripts/respaldo.sh respaldos
+
+      - name: Guardar el respaldo cifrado (30 días)
+        if: steps.config.outputs.activo == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: respaldo-${{ github.run_id }}
+          path: ${{ steps.respaldo.outputs.archivo }}
+          retention-days: 30
+          if-no-files-found: error
