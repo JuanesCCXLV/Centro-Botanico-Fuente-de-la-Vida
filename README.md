@@ -63,6 +63,10 @@ Monolito modular por capas; cada capa solo llama a la inmediatamente inferior:
 
 La autorización se verifica siempre en el servidor con `requireAdmin()` (`src/lib/sesion.ts`) en cada página y Server Action del panel. `src/proxy.ts` solo hace una redirección optimista cuando no hay cookie de sesión.
 
+## Despliegue
+
+Vercel + Neon + Cloudinary + Cloudflare (solo DNS). Guía paso a paso: [`docs/despliegue.md`](docs/despliegue.md).
+
 ## Administradores
 
 Crear cuentas, restablecer contraseñas y desactivar accesos: `npm run admin` (ver [`docs/administradores.md`](docs/administradores.md)).
