@@ -42,6 +42,17 @@ jobs:
       - name: Verificar que el esquema y las migraciones coinciden
         run: npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
       - run: npm run build
+      - name: Instalar Chromium para Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Pruebas de punta a punta
+        run: npm run test:e2e
+      - name: Subir reporte de Playwright si fallan
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-playwright
+          path: playwright-report/
+          retention-days: 7
       - run: npm audit --audit-level=high
       - uses: gitleaks/gitleaks-action@v2
         env:

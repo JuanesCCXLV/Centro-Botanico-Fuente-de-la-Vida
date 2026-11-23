@@ -52,3 +52,8 @@ skills-lock.json
 
 # Imágenes subidas en desarrollo (almacenamiento local)
 /public/uploads/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
