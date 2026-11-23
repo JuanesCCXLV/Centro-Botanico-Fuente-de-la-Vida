@@ -11,7 +11,8 @@ export function TarjetaProducto({ producto, whatsapp }: { producto: ProductoPubl
 
   return (
     <article className="flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition hover:shadow-md">
-      <Link href={enlace} className="relative block aspect-square bg-zinc-100">
+      {/* Enlace duplicado del título: se oculta a lectores de pantalla y del orden de tabulación */}
+      <Link href={enlace} tabIndex={-1} aria-hidden className="relative block aspect-square bg-zinc-100">
         {frontal ? (
           <Image
             src={frontal.url}

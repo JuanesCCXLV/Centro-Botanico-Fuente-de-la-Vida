@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const esDesarrollo = process.env.NODE_ENV === "development";
+// HSTS y upgrade-insecure-requests solo cuando el sitio se publica con HTTPS (SITE_URL de producción).
+// Así `next start` también funciona en http://localhost (Lighthouse en CI, pruebas locales).
+const conHttps = !esDesarrollo && (process.env.SITE_URL ?? "").startsWith("https://");
 
 // CSP sin nonces (compatible con el prerenderizado de cacheComponents).
 // - img-src: Cloudinary para las fotos de productos.
@@ -18,7 +21,7 @@ const csp = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  ...(esDesarrollo ? [] : ["upgrade-insecure-requests"]),
+  ...(conHttps ? ["upgrade-insecure-requests"] : []),
 ].join("; ");
 
 const cabecerasSeguridad = [
@@ -27,16 +30,17 @@ const cabecerasSeguridad = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
-  // HSTS solo en producción: en localhost obligaría al navegador a usar HTTPS
-  ...(esDesarrollo
-    ? []
-    : [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" }]),
+  ...(conHttps ? [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" }] : []),
 ];
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   poweredByHeader: false,
+  // Metadatos siempre en el <head> (título, descripción, Open Graph), no al final del <body>.
+  // Google y WhatsApp ya los recibían así; esto lo extiende a todos los buscadores y vistas previas.
+  // El costo es mínimo: los datos del producto salen de la caché del catálogo. (RNF-11)
+  htmlLimitedBots: /.*/,
   experimental: {
     // Dos imágenes de hasta 5 MB más el resto del formulario. En el navegador se reducen antes
     // de enviarlas (Vercel limita el cuerpo de la petición a 4.5 MB), pero el servidor no depende de eso.
