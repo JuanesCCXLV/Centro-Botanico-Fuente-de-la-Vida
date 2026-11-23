@@ -79,7 +79,9 @@ Visitante → Cloudflare (solo DNS) → Vercel (Next.js, región iad1) → Neon 
 | `CLOUDINARY_API_KEY` | de Cloudinary | igual |
 | `CLOUDINARY_API_SECRET` | de Cloudinary | igual |
 
-5. **Deploy.** Igual que en Vercel, si falta una variable obligatoria el build se detiene y dice cuál.
+En `DIRECT_URL` y `DATABASE_URL`, pega solo la URL de PostgreSQL que entrega Neon (`postgresql://…`), sin `psql`, comillas ni el nombre de la variable. Para cada contexto, ambas URLs deben apuntar a la misma base de datos, una directa y la otra con pool.
+
+5. **Deploy.** Si Prisma muestra `P1013` en `prisma migrate deploy`, revisa primero `DIRECT_URL`: Prisma usa esa URL para aplicar las migraciones antes de ejecutar `next build`. Después de corregir las variables, inicia un nuevo despliegue para verificar el cambio.
 
 **Diferencias con Vercel que ya resuelve el código:**
 
