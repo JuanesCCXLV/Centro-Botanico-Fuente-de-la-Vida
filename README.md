@@ -40,7 +40,15 @@ y reinicia `npm run dev`.
 npm run lint && npm run typecheck && npm test
 ```
 
-La integración continua (GitHub Actions) ejecuta lo mismo, más `npm audit` y gitleaks.
+Pruebas de punta a punta (Playwright), con la base de datos encendida y la semilla aplicada:
+
+```bash
+npx playwright install chromium   # solo la primera vez
+npm run test:e2e                   # usa ADMIN_EMAIL y ADMIN_PASSWORD de tu .env
+npx playwright show-report         # reporte con capturas si algo falla
+```
+
+La integración continua (GitHub Actions) ejecuta todo lo anterior, además de `next build`, `npm audit` y gitleaks.
 
 ## Arquitectura
 
