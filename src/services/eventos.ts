@@ -14,7 +14,11 @@ export type TipoEvento =
   | "CATEGORIA_EDITADA"
   | "CATEGORIA_VISIBILIDAD"
   | "CATEGORIA_ELIMINADA"
-  | "INFO_LOCAL_EDITADA";
+  | "INFO_LOCAL_EDITADA"
+  | "ADMIN_CREADO"
+  | "ADMIN_CLAVE_RESTABLECIDA"
+  | "ADMIN_DESACTIVADO"
+  | "ADMIN_ACTIVADO";
 
 export interface EventoRepo {
   registrar(evento: {
