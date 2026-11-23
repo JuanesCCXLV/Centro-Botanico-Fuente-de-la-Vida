@@ -1,5 +1,5 @@
 import type { NextConfig } from "next";
-import { resolverUrlSitio } from "./src/lib/url-sitio";
+import { entornoSitio, plataforma, resolverUrlSitio } from "./src/lib/url-sitio";
 
 const esDesarrollo = process.env.NODE_ENV === "development";
 // HSTS y upgrade-insecure-requests solo cuando el sitio se publica con HTTPS (SITE_URL de producción).
@@ -35,6 +35,14 @@ const cabecerasSeguridad = [
 ];
 
 const nextConfig: NextConfig = {
+  // Valores que dependen de la plataforma, calculados al compilar y fijados en el código.
+  // En Netlify, CONTEXT, URL y DEPLOY_PRIME_URL solo existen durante el build, no al atender visitas.
+  // env.ts e ip.ts los leen como process.env.SITE_URL, process.env.ENTORNO_SITIO y process.env.PLATAFORMA.
+  env: {
+    SITE_URL: resolverUrlSitio(process.env),
+    ENTORNO_SITIO: entornoSitio(process.env),
+    PLATAFORMA: plataforma(process.env),
+  },
   cacheComponents: true,
   partialPrefetching: true,
   poweredByHeader: false,
@@ -44,7 +52,7 @@ const nextConfig: NextConfig = {
   htmlLimitedBots: /.*/,
   experimental: {
     // Dos imágenes de hasta 5 MB más el resto del formulario. En el navegador se reducen antes
-    // de enviarlas (Vercel limita el cuerpo de la petición a 4.5 MB), pero el servidor no depende de eso.
+    // de enviarlas (Vercel limita el cuerpo de la petición a 4.5 MB y Netlify a 6 MB), pero el servidor no depende de eso.
     serverActions: { bodySizeLimit: "11mb" },
     proxyClientMaxBodySize: "11mb",
   },

@@ -1,0 +1,9 @@
+# Despliegue en Netlify (alternativa sin costo a Vercel; ver docs/despliegue.md).
+# Netlify detecta Next.js y usa su adaptador oficial (OpenNext); no hace falta instalar plugins.
+
+[build]
+  # Genera Prisma, aplica las migraciones pendientes y compila (igual que en Vercel)
+  command = "npm run build:produccion"
+
+[build.environment]
+  NODE_VERSION = "22"
