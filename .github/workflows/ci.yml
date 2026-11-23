@@ -73,7 +73,14 @@ jobs:
             echo "| Página | Rendimiento | Accesibilidad | Buenas prácticas | SEO |"
             echo "|---|---|---|---|---|"
             jq -r '.[] | select(.isRepresentativeRun) | "| \(.url | sub("http://localhost:3000"; "")) | \(.summary.performance*100|round) | \(.summary.accessibility*100|round) | \(.summary["best-practices"]*100|round) | \(.summary.seo*100|round) |"' .lighthouseci/reportes/manifest.json
-          } >> "$GITHUB_STEP_SUMMARY"
+            echo
+            echo "**Auditorías no aprobadas (accesibilidad y SEO):**"
+            for f in .lighthouseci/reportes/*.report.json; do
+              jq -r '. as $r | (.categories.accessibility.auditRefs + .categories.seo.auditRefs)[]
+                | select(.weight > 0) | $r.audits[.id] | select(.score != null and .score < 1)
+                | "- `\($r.finalDisplayedUrl | sub("http://localhost:3000"; ""))` · \(.id): \(.title)"' "$f"
+            done | sort -u
+          } | tee -a "$GITHUB_STEP_SUMMARY"
       - name: Subir reportes de Lighthouse
         if: always()
         uses: actions/upload-artifact@v4
