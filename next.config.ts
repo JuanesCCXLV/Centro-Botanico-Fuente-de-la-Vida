@@ -37,6 +37,10 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   poweredByHeader: false,
+  // Metadatos siempre en el <head> (título, descripción, Open Graph), no al final del <body>.
+  // Google y WhatsApp ya los recibían así; esto lo extiende a todos los buscadores y vistas previas.
+  // El costo es mínimo: los datos del producto salen de la caché del catálogo. (RNF-11)
+  htmlLimitedBots: /.*/,
   experimental: {
     // Dos imágenes de hasta 5 MB más el resto del formulario. En el navegador se reducen antes
     // de enviarlas (Vercel limita el cuerpo de la petición a 4.5 MB), pero el servidor no depende de eso.
