@@ -65,7 +65,7 @@ La autorización se verifica siempre en el servidor con `requireAdmin()` (`src/l
 
 ## Despliegue
 
-Vercel + Neon + Cloudinary + Cloudflare (solo DNS). Guía paso a paso: [`docs/despliegue.md`](docs/despliegue.md).
+Vercel Pro o Netlify Free + Neon + Cloudinary + Cloudflare (solo DNS). Guía paso a paso: [`docs/despliegue.md`](docs/despliegue.md).
 
 ## Administradores
 

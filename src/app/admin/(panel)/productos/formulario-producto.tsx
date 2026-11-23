@@ -33,7 +33,7 @@ const claseCampo =
 
 /**
  * Reduce la foto en el navegador antes de enviarla (máx. 1600 px, WebP o JPEG).
- * Una foto de celular de 6 MB queda en unos cientos de KB; además Vercel rechaza peticiones de más de 4.5 MB.
+ * Una foto de celular de 6 MB queda en unos cientos de KB; además Vercel rechaza peticiones de más de 4.5 MB (Netlify, de más de 6 MB).
  * Si el navegador no puede procesarla, se envía el original y el servidor decide.
  */
 async function reducirImagen(archivo: File): Promise<File> {
