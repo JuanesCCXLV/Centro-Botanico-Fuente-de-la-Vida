@@ -7,7 +7,7 @@ import { TarjetaProducto } from "./tarjeta-producto";
 export default function PaginaCatalogo({ searchParams }: PageProps<"/">) {
   return (
     <main>
-      <section className="bg-gradient-to-b from-green-950 to-green-800 px-4 py-10 text-white">
+      <section className="bg-green-900 bg-linear-to-b from-green-950 to-green-800 px-4 py-10 text-white">
         <div className="mx-auto max-w-6xl">
           <h1 className="text-3xl font-bold sm:text-4xl">Productos naturistas en Cali</h1>
           <p className="mt-2 max-w-xl text-green-100">

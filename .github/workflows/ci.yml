@@ -24,7 +24,8 @@ jobs:
     env:
       # Valores ficticios solo para CI
       DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
-      SITE_URL: "https://ejemplo.invalid"
+      # http://localhost para poder probar el build de producción con `next start` (Lighthouse)
+      SITE_URL: "http://localhost:3000"
       ADMIN_EMAIL: "admin@ejemplo.invalid"
       ADMIN_PASSWORD: "clave-solo-para-ci-123"
     steps:
@@ -61,6 +62,26 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Pruebas de punta a punta
         run: npm run test:e2e
+      - name: Lighthouse en celular (RNF-09, RNF-11, RNF-12)
+        run: npx --yes @lhci/cli@0 autorun
+      - name: Resumen de Lighthouse
+        if: always()
+        run: |
+          [ -f .lighthouseci/reportes/manifest.json ] || exit 0
+          {
+            echo "### Lighthouse (celular, mediana de 3 ejecuciones)"
+            echo "| Página | Rendimiento | Accesibilidad | Buenas prácticas | SEO |"
+            echo "|---|---|---|---|---|"
+            jq -r '.[] | select(.isRepresentativeRun) | "| \(.url | sub("http://localhost:3000"; "")) | \(.summary.performance*100|round) | \(.summary.accessibility*100|round) | \(.summary["best-practices"]*100|round) | \(.summary.seo*100|round) |"' .lighthouseci/reportes/manifest.json
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Subir reportes de Lighthouse
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reportes-lighthouse
+          path: .lighthouseci/reportes/
+          retention-days: 14
+          if-no-files-found: ignore
       - name: Subir reporte de Playwright si fallan
         if: failure()
         uses: actions/upload-artifact@v4

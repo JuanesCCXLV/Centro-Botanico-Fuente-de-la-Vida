@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const esDesarrollo = process.env.NODE_ENV === "development";
+// HSTS y upgrade-insecure-requests solo cuando el sitio se publica con HTTPS (SITE_URL de producción).
+// Así `next start` también funciona en http://localhost (Lighthouse en CI, pruebas locales).
+const conHttps = !esDesarrollo && (process.env.SITE_URL ?? "").startsWith("https://");
 
 // CSP sin nonces (compatible con el prerenderizado de cacheComponents).
 // - img-src: Cloudinary para las fotos de productos.
@@ -18,7 +21,7 @@ const csp = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  ...(esDesarrollo ? [] : ["upgrade-insecure-requests"]),
+  ...(conHttps ? ["upgrade-insecure-requests"] : []),
 ].join("; ");
 
 const cabecerasSeguridad = [
@@ -27,10 +30,7 @@ const cabecerasSeguridad = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
-  // HSTS solo en producción: en localhost obligaría al navegador a usar HTTPS
-  ...(esDesarrollo
-    ? []
-    : [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" }]),
+  ...(conHttps ? [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" }] : []),
 ];
 
 const nextConfig: NextConfig = {
