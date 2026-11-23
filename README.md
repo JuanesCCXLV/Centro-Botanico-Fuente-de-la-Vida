@@ -62,3 +62,7 @@ Monolito modular por capas; cada capa solo llama a la inmediatamente inferior:
 | Infraestructura (sesión, entorno, utilidades) | `src/lib/` |
 
 La autorización se verifica siempre en el servidor con `requireAdmin()` (`src/lib/sesion.ts`) en cada página y Server Action del panel. `src/proxy.ts` solo hace una redirección optimista cuando no hay cookie de sesión.
+
+## Respaldos
+
+Respaldo diario automático, verificado y cifrado con GitHub Actions. La configuración y la restauración están en [`docs/respaldos.md`](docs/respaldos.md).
