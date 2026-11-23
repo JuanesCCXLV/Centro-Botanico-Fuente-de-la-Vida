@@ -17,13 +17,20 @@ export const PNG = {
   ),
 };
 
+/**
+ * Campo de formulario VISIBLE por su atributo name. Next 16 conserva ocultas en el DOM las
+ * páginas ya visitadas (para restaurar su estado), así que un selector CSS puede encontrar
+ * también el formulario de la página anterior.
+ */
+export const campo = (page: Page, name: string) => page.locator(`[name="${name}"]:visible`);
+
 /** Nombre único por ejecución para no chocar con datos de corridas anteriores. */
 export const unico = (base: string) => `${base} ${Date.now().toString(36)}`;
 
 export async function iniciarSesion(page: Page) {
   await page.goto("/admin/login");
-  await page.locator('[name="correo"]').fill(ADMIN_EMAIL);
-  await page.locator('[name="clave"]').fill(ADMIN_PASSWORD);
+  await campo(page, "correo").fill(ADMIN_EMAIL);
+  await campo(page, "clave").fill(ADMIN_PASSWORD);
   await page.getByRole("button", { name: "Ingresar" }).click();
   await expect(page).toHaveURL(/\/admin$/);
 }
@@ -34,16 +41,17 @@ export async function crearProducto(
   datos: { nombre: string; precio: string; categoria?: string; posterior?: boolean },
 ) {
   await page.goto("/admin/productos/nuevo");
-  await page.locator('[name="nombre"]').fill(datos.nombre);
-  await page.locator('[name="precioCop"]').fill(datos.precio);
-  await page.locator('[name="categoriaId"]').selectOption({ label: datos.categoria ?? "Infusiones y tés" });
-  await page.locator('[name="descripcion"]').fill("Producto creado por las pruebas automáticas.");
-  await page.locator('[name="imagenFRONTAL"]').setInputFiles(PNG);
-  if (datos.posterior) await page.locator('[name="imagenPOSTERIOR"]').setInputFiles({ ...PNG, name: "posterior.png" });
+  await campo(page, "nombre").fill(datos.nombre);
+  await campo(page, "precioCop").fill(datos.precio);
+  await campo(page, "categoriaId").selectOption({ label: datos.categoria ?? "Infusiones y tés" });
+  await campo(page, "descripcion").fill("Producto creado por las pruebas automáticas.");
+  await campo(page, "imagenFRONTAL").setInputFiles(PNG);
+  if (datos.posterior) await campo(page, "imagenPOSTERIOR").setInputFiles({ ...PNG, name: "posterior.png" });
   // Espera a que el navegador termine de preparar las imágenes
   await expect(page.getByText("Preparando imagen…")).toHaveCount(0);
   await page.getByRole("button", { name: "Crear producto" }).click();
   await expect(page).toHaveURL(/\/admin\/productos$/);
 }
 
-export const filaDe = (page: Page, texto: string) => page.getByRole("row").filter({ hasText: texto });
+export const filaDe = (page: Page, texto: string) =>
+  page.getByRole("row").filter({ hasText: texto, visible: true });

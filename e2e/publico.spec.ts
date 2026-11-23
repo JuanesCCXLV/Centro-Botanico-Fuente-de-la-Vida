@@ -39,7 +39,7 @@ test.describe("Sitio público (HU-01 a HU-05)", () => {
   test("Una URL inexistente muestra la página 404 en español y no se indexa", async ({ page }) => {
     await page.goto("/productos/no-existe-este-producto");
     await expect(page.getByRole("heading", { name: "No encontramos esta página" })).toBeVisible();
-    await expect(page.locator('meta[name="robots"][content*="noindex"]')).toHaveCount(1);
+    await expect(page.locator('meta[name="robots"][content*="noindex"]').first()).toBeAttached();
   });
 
   test("RNF-11: robots.txt excluye el panel y el sitemap lista productos", async ({ request }) => {

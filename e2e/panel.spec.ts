@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { crearProducto, filaDe, iniciarSesion, PNG, unico } from "./utilidades";
+import { campo, crearProducto, filaDe, iniciarSesion, PNG, unico } from "./utilidades";
 
 test.describe("Panel de productos y su efecto en el catálogo (HU-07, HU-09)", () => {
   test.beforeEach(async ({ page }) => {
@@ -26,23 +26,24 @@ test.describe("Panel de productos y su efecto en el catálogo (HU-07, HU-09)", (
 
   test("CP-14: datos inválidos se rechazan sin perder lo escrito", async ({ page }) => {
     await page.goto("/admin/productos/nuevo");
-    await page.locator('[name="nombre"]').fill("Producto con precio malo");
-    await page.locator('[name="precioCop"]').fill("-500");
-    await page.locator('[name="descripcion"]').fill("x");
+    // Los campos vacíos obligatorios los frena el navegador; aquí se prueba la validación del servidor
+    await campo(page, "nombre").fill("Producto con precio malo");
+    await campo(page, "precioCop").fill("-500");
+    await campo(page, "categoriaId").selectOption({ label: "Infusiones y tés" });
+    await campo(page, "descripcion").fill("x");
     await page.getByRole("button", { name: "Crear producto" }).click();
 
     await expect(page.getByText("El precio debe ser un número entero en pesos, sin decimales.")).toBeVisible();
-    await expect(page.getByText("Elige una categoría.")).toBeVisible();
-    await expect(page.locator('[name="nombre"]')).toHaveValue("Producto con precio malo");
+    await expect(campo(page, "nombre")).toHaveValue("Producto con precio malo");
   });
 
   test("CS-12: un archivo que no es imagen se rechaza aunque diga ser PNG", async ({ page }) => {
     await page.goto("/admin/productos/nuevo");
-    await page.locator('[name="nombre"]').fill(unico("Producto con SVG"));
-    await page.locator('[name="precioCop"]').fill("1000");
-    await page.locator('[name="categoriaId"]').selectOption({ label: "Infusiones y tés" });
-    await page.locator('[name="descripcion"]').fill("x");
-    await page.locator('[name="imagenFRONTAL"]').setInputFiles({
+    await campo(page, "nombre").fill(unico("Producto con SVG"));
+    await campo(page, "precioCop").fill("1000");
+    await campo(page, "categoriaId").selectOption({ label: "Infusiones y tés" });
+    await campo(page, "descripcion").fill("x");
+    await campo(page, "imagenFRONTAL").setInputFiles({
       name: "foto.png",
       mimeType: "image/png",
       buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'),
@@ -58,7 +59,7 @@ test.describe("Panel de productos y su efecto en el catálogo (HU-07, HU-09)", (
 
     // CP-15: editar el precio
     await filaDe(page, nombre).getByRole("link", { name: "Editar" }).click();
-    await page.locator('[name="precioCop"]').fill("23500");
+    await campo(page, "precioCop").fill("23500");
     await page.getByRole("button", { name: "Guardar cambios" }).click();
     await expect(filaDe(page, nombre)).toContainText(/23\.500/);
 
@@ -93,7 +94,7 @@ test.describe("Panel de productos y su efecto en el catálogo (HU-07, HU-09)", (
     await filaDe(page, nombre).getByRole("link", { name: "Editar" }).click();
     const antes = await page.getByRole("img", { name: /Vista previa imagen frontal/ }).getAttribute("src");
 
-    await page.locator('[name="imagenFRONTAL"]').setInputFiles({ ...PNG, name: "nueva.png" });
+    await campo(page, "imagenFRONTAL").setInputFiles({ ...PNG, name: "nueva.png" });
     await expect(page.getByText("Preparando imagen…")).toHaveCount(0);
     await page.getByRole("button", { name: "Guardar cambios" }).click();
     await expect(page).toHaveURL(/\/admin\/productos$/);
@@ -117,7 +118,7 @@ test.describe("Categorías e información del local (HU-08, HU-10)", () => {
 
     const nombre = unico("Categoría E2E");
     await page.goto("/admin/categorias/nueva");
-    await page.locator('[name="nombre"]').fill(nombre);
+    await campo(page, "nombre").fill(nombre);
     await page.getByRole("button", { name: "Crear categoría" }).click();
     await expect(filaDe(page, nombre)).toBeVisible();
 
@@ -129,7 +130,7 @@ test.describe("Categorías e información del local (HU-08, HU-10)", () => {
   test("CP-20: editar horarios del local se refleja en el sitio público", async ({ page }) => {
     const horario = unico("Lunes a sábado 8 a. m. – 6 p. m. ·");
     await page.goto("/admin/local");
-    await page.locator('[name="horarios"]').fill(horario);
+    await campo(page, "horarios").fill(horario);
     await page.getByRole("button", { name: "Guardar" }).click();
     await expect(page.getByText("Información del local actualizada.")).toBeVisible();
 
@@ -139,7 +140,7 @@ test.describe("Categorías e información del local (HU-08, HU-10)", () => {
 
   test("Las redes sociales solo aceptan enlaces del dominio de cada red", async ({ page }) => {
     await page.goto("/admin/local");
-    await page.locator('[name="instagram"]').fill("https://instagram.com.sitio-falso.co/tienda");
+    await campo(page, "instagram").fill("https://instagram.com.sitio-falso.co/tienda");
     await page.getByRole("button", { name: "Guardar" }).click();
     await expect(page.getByText(/Instagram: usa un enlace https:\/\/ de instagram\.com/)).toBeVisible();
   });

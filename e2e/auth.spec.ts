@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { ADMIN_EMAIL, iniciarSesion } from "./utilidades";
+import { ADMIN_EMAIL, campo, iniciarSesion } from "./utilidades";
 
 test.describe("Autenticación del administrador (HU-06)", () => {
   test("CS-01: el panel y sus páginas exigen sesión", async ({ page }) => {
@@ -17,15 +17,15 @@ test.describe("Autenticación del administrador (HU-06)", () => {
 
   test("CP-11: credenciales inválidas muestran un mensaje genérico", async ({ page }) => {
     await page.goto("/admin/login");
-    await page.locator('[name="correo"]').fill(ADMIN_EMAIL);
-    await page.locator('[name="clave"]').fill("clave-incorrecta-123");
+    await campo(page, "correo").fill(ADMIN_EMAIL);
+    await campo(page, "clave").fill("clave-incorrecta-123");
     await page.getByRole("button", { name: "Ingresar" }).click();
     const mensaje = page.getByText(/Correo o contraseña incorrectos/);
     await expect(mensaje).toBeVisible();
 
     // El mismo mensaje para un correo que no existe: no se revela qué cuentas hay
-    await page.locator('[name="correo"]').fill("nadie@ejemplo.invalid");
-    await page.locator('[name="clave"]').fill("clave-incorrecta-123");
+    await campo(page, "correo").fill("nadie@ejemplo.invalid");
+    await campo(page, "clave").fill("clave-incorrecta-123");
     await page.getByRole("button", { name: "Ingresar" }).click();
     await expect(mensaje).toBeVisible();
   });
