@@ -39,6 +39,14 @@ jobs:
       - run: npm test
       - name: Migraciones y semilla sobre la base de prueba
         run: npx prisma migrate deploy && npx prisma db seed
+      - name: Comando de administradores
+        run: |
+          npm run admin -- crear --nombre "Segundo admin" --correo segundo@ejemplo.invalid
+          npm run admin -- restablecer-clave --correo segundo@ejemplo.invalid
+          npm run admin -- desactivar --correo segundo@ejemplo.invalid
+          npm run admin -- listar
+          # No debe dejar el panel sin administradores
+          ! npm run admin -- desactivar --correo "$ADMIN_EMAIL"
       - name: Verificar que el esquema y las migraciones coinciden
         run: npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
       - run: npm run build
