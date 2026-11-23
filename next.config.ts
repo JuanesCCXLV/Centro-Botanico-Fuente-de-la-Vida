@@ -1,9 +1,10 @@
 import type { NextConfig } from "next";
+import { resolverUrlSitio } from "./src/lib/url-sitio";
 
 const esDesarrollo = process.env.NODE_ENV === "development";
 // HSTS y upgrade-insecure-requests solo cuando el sitio se publica con HTTPS (SITE_URL de producción).
 // Así `next start` también funciona en http://localhost (Lighthouse en CI, pruebas locales).
-const conHttps = !esDesarrollo && (process.env.SITE_URL ?? "").startsWith("https://");
+const conHttps = !esDesarrollo && resolverUrlSitio(process.env).startsWith("https://");
 
 // CSP sin nonces (compatible con el prerenderizado de cacheComponents).
 // - img-src: Cloudinary para las fotos de productos.
