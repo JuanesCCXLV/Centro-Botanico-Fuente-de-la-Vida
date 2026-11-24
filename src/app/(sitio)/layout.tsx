@@ -1,35 +1,69 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { obtenerInfoLocal } from "@/lib/catalogo";
+import { obtenerCategorias, obtenerInfoLocal } from "@/lib/catalogo";
 import { enlaceWhatsApp } from "@/lib/whatsapp";
+import { MenuCategorias } from "./menu-categorias";
 
 export default function LayoutSitio({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-full flex-1 flex-col bg-white text-zinc-900">
-      <header className="sticky top-0 z-10 border-b border-green-900/20 bg-green-950 text-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-          <Link href="/" className="flex items-center gap-2 font-bold leading-tight">
-            <span aria-hidden className="text-2xl">🌿</span>
-            <span>
-              Centro Botánico
-              <span className="block text-xs font-normal text-green-200">Fuente de la Vida</span>
-            </span>
-          </Link>
-          <nav aria-label="Principal" className="flex gap-4 text-sm">
-            <Link href="/" className="hover:text-green-200">
-              Catálogo
+      <header className="sticky top-0 z-20 text-white shadow-sm">
+        <div className="bg-green-950">
+          <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2">
+            <Link href="/" className="flex items-center gap-3 font-bold leading-tight">
+              <Image src="/logo-96.webp" alt="" width={44} height={43} unoptimized />
+              <span>
+                Centro Botánico
+                <span className="block text-xs font-normal text-green-200">Fuente de la Vida</span>
+              </span>
             </Link>
-            <Link href="/local" className="hover:text-green-200">
-              Visítanos
-            </Link>
-          </nav>
+          </div>
         </div>
+        <BarraSecciones />
       </header>
 
       <div className="flex-1">{children}</div>
 
       <PieDePagina />
     </div>
+  );
+}
+
+/** Categorías que se muestran directo en la barra; todas están en el desplegable. */
+const CATEGORIAS_EN_BARRA = 3;
+const claseSeccion = "shrink-0 whitespace-nowrap px-3 py-2.5 hover:bg-white/10";
+
+/** Barra de secciones (HU-02, HU-04): categorías creadas en el panel, el local y atención al cliente. */
+async function BarraSecciones() {
+  const [categorias, info] = await Promise.all([obtenerCategorias(), obtenerInfoLocal()]);
+
+  return (
+    <nav aria-label="Secciones del sitio" className="bg-lime-800 text-sm">
+      <div className="mx-auto flex max-w-6xl items-stretch px-1 sm:px-2">
+        <MenuCategorias categorias={categorias} />
+        <div className="flex min-w-0 flex-1 items-stretch overflow-x-auto [scrollbar-width:none]">
+          {categorias.slice(0, CATEGORIAS_EN_BARRA).map((c) => (
+            <Link key={c.slug} href={`/?categoria=${encodeURIComponent(c.slug)}`} className={claseSeccion}>
+              {c.nombre}
+            </Link>
+          ))}
+          <Link href="/local" className={claseSeccion}>
+            Visítanos
+          </Link>
+          {info && (
+            <a
+              href={enlaceWhatsApp(info.whatsapp, "Hola, quisiera hacer una consulta.")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={claseSeccion}
+            >
+              Atención al cliente
+            </a>
+          )}
+        </div>
+      </div>
+    </nav>
   );
 }
 

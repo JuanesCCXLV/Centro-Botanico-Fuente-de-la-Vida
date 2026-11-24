@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { obtenerCategorias, obtenerInfoLocal, obtenerProductos } from "@/lib/catalogo";
@@ -7,12 +8,24 @@ import { TarjetaProducto } from "./tarjeta-producto";
 export default function PaginaCatalogo({ searchParams }: PageProps<"/">) {
   return (
     <main>
-      <section className="bg-green-900 bg-linear-to-b from-green-950 to-green-800 px-4 py-10 text-white">
-        <div className="mx-auto max-w-6xl">
-          <h1 className="text-3xl font-bold sm:text-4xl">Productos naturistas en Cali</h1>
-          <p className="mt-2 max-w-xl text-green-100">
-            Consulta nuestro catálogo con precios y haz tu pedido por WhatsApp. Te esperamos en el barrio Colseguros.
-          </p>
+      <section className="relative isolate overflow-hidden bg-green-950 bg-[url(/fondo-768.webp)] bg-cover bg-center px-4 py-10 text-white sm:bg-[url(/fondo-1376.webp)] sm:py-12">
+        {/* Capa oscura: mantiene el contraste del texto sobre la imagen (RNF-12) */}
+        <div aria-hidden className="absolute inset-0 -z-10 bg-linear-to-r from-green-950/90 via-green-950/70 to-green-950/30" />
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-6">
+          <div>
+            <h1 className="text-3xl font-bold drop-shadow sm:text-4xl">Productos naturistas en Cali</h1>
+            <p className="mt-2 max-w-xl text-green-50 drop-shadow">
+              Consulta nuestro catálogo con precios y haz tu pedido por WhatsApp. Te esperamos en el barrio Colseguros.
+            </p>
+          </div>
+          <Image
+            src="/logo-320.webp"
+            alt=""
+            width={160}
+            height={157}
+            unoptimized
+            className="hidden shrink-0 drop-shadow-lg sm:block"
+          />
         </div>
       </section>
 

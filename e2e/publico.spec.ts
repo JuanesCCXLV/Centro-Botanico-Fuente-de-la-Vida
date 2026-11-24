@@ -6,9 +6,11 @@ test.describe("Sitio público (HU-01 a HU-05)", () => {
     await expect(page.getByRole("heading", { name: "Productos naturistas en Cali" })).toBeVisible();
     await expect(page.getByText(/\d+ productos?/)).toBeVisible();
 
-    await page.getByRole("navigation", { name: "Categorías" }).getByRole("link", { name: "Infusiones y tés" }).click();
+    await page.getByRole("navigation", { name: "Categorías", exact: true }).getByRole("link", { name: "Infusiones y tés" }).click();
     await expect(page).toHaveURL(/categoria=infusiones-y-tes/);
-    await expect(page.getByRole("link", { name: "Infusiones y tés" })).toHaveAttribute("aria-current", "page");
+    await expect(
+      page.getByRole("navigation", { name: "Categorías", exact: true }).getByRole("link", { name: "Infusiones y tés" }),
+    ).toHaveAttribute("aria-current", "page");
   });
 
   test("CP-04: la búsqueda sin resultados muestra un mensaje claro", async ({ page }) => {
