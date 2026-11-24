@@ -6,9 +6,11 @@ test.describe("Sitio público (HU-01 a HU-05)", () => {
     await expect(page.getByRole("heading", { name: "Productos naturistas en Cali" })).toBeVisible();
     await expect(page.getByText(/\d+ productos?/)).toBeVisible();
 
-    await page.getByRole("navigation", { name: "Categorías" }).getByRole("link", { name: "Infusiones y tés" }).click();
+    await page.getByRole("navigation", { name: "Categorías", exact: true }).getByRole("link", { name: "Infusiones y tés" }).click();
     await expect(page).toHaveURL(/categoria=infusiones-y-tes/);
-    await expect(page.getByRole("link", { name: "Infusiones y tés" })).toHaveAttribute("aria-current", "page");
+    await expect(
+      page.getByRole("navigation", { name: "Categorías", exact: true }).getByRole("link", { name: "Infusiones y tés" }),
+    ).toHaveAttribute("aria-current", "page");
   });
 
   test("CP-04: la búsqueda sin resultados muestra un mensaje claro", async ({ page }) => {
@@ -34,6 +36,17 @@ test.describe("Sitio público (HU-01 a HU-05)", () => {
     await expect(page.locator('iframe[title="Mapa de ubicación del local"]')).toBeVisible();
     await expect(page.getByRole("heading", { name: "Horarios" })).toBeVisible();
     await expect(page.getByRole("main").getByRole("link", { name: "WhatsApp" })).toHaveAttribute("rel", "noopener noreferrer");
+  });
+
+  test("Canal URES TV: reproductor en vivo y descarga de la app", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("navigation", { name: "Secciones del sitio" }).getByRole("link", { name: "URES TV" }).click();
+    await expect(page).toHaveURL(/\/canal$/);
+    await expect(page.getByRole("heading", { name: "URES TV", level: 1 })).toBeVisible();
+    // El navegador de las pruebas (Chromium de Playwright) puede no traer HLS: vale el reproductor o el aviso
+    await expect(page.locator("video[aria-label='Señal en vivo de URES TV']").or(page.getByRole("status"))).toBeVisible();
+    const app = page.getByRole("main").getByRole("link", { name: "Descargar la app" }).first();
+    await expect(app).toHaveAttribute("rel", "noopener noreferrer");
   });
 
   test("Una URL inexistente muestra la página 404 en español y no se indexa", async ({ page }) => {
