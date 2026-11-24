@@ -34,7 +34,7 @@ export default function LayoutSitio({ children }: { children: ReactNode }) {
 const CATEGORIAS_EN_BARRA = 3;
 const claseSeccion = "shrink-0 whitespace-nowrap px-3 py-2.5 hover:bg-white/10";
 
-/** Barra de secciones (HU-02, HU-04): categorías creadas en el panel, el local y atención al cliente. */
+/** Barra de secciones (HU-02, HU-04): categorías creadas en el panel, el canal, el local y atención al cliente. */
 async function BarraSecciones() {
   const [categorias, info] = await Promise.all([obtenerCategorias(), obtenerInfoLocal()]);
 
@@ -48,6 +48,10 @@ async function BarraSecciones() {
               {c.nombre}
             </Link>
           ))}
+          <Link href="/canal" className={`${claseSeccion} flex items-center gap-1.5`}>
+            <span aria-hidden className="size-2 rounded-full bg-red-500" />
+            URES TV
+          </Link>
           <Link href="/local" className={claseSeccion}>
             Visítanos
           </Link>

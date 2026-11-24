@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { CANAL_APP_QR, CANAL_SENAL_HLS, origen } from "./src/lib/canal";
 import { entornoSitio, plataforma, resolverUrlSitio } from "./src/lib/url-sitio";
 
 const esDesarrollo = process.env.NODE_ENV === "development";
@@ -9,14 +10,16 @@ const conHttps = !esDesarrollo && resolverUrlSitio(process.env).startsWith("http
 // CSP sin nonces (compatible con el prerenderizado de cacheComponents).
 // - img-src: Cloudinary para las fotos de productos.
 // - frame-src: mapa de Google en la página del local (HU-04).
+// - media-src: señal en vivo del canal URES TV (página /canal); img-src también permite su QR de descarga.
 // - 'unsafe-eval' solo en desarrollo (lo necesita el modo dev de React).
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${esDesarrollo ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' blob: data: https://res.cloudinary.com",
+  `img-src 'self' blob: data: https://res.cloudinary.com ${origen(CANAL_APP_QR)}`,
+  `media-src 'self' blob: ${origen(CANAL_SENAL_HLS)}`,
   "font-src 'self'",
-  "connect-src 'self'",
+  `connect-src 'self' ${origen(CANAL_SENAL_HLS)}`,
   "frame-src https://www.google.com",
   "object-src 'none'",
   "base-uri 'self'",

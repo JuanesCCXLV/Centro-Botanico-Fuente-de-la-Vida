@@ -38,6 +38,17 @@ test.describe("Sitio público (HU-01 a HU-05)", () => {
     await expect(page.getByRole("main").getByRole("link", { name: "WhatsApp" })).toHaveAttribute("rel", "noopener noreferrer");
   });
 
+  test("Canal URES TV: reproductor en vivo y descarga de la app", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("navigation", { name: "Secciones del sitio" }).getByRole("link", { name: "URES TV" }).click();
+    await expect(page).toHaveURL(/\/canal$/);
+    await expect(page.getByRole("heading", { name: "URES TV", level: 1 })).toBeVisible();
+    // El navegador de las pruebas (Chromium de Playwright) puede no traer HLS: vale el reproductor o el aviso
+    await expect(page.locator("video[aria-label='Señal en vivo de URES TV']").or(page.getByRole("status"))).toBeVisible();
+    const app = page.getByRole("main").getByRole("link", { name: "Descargar la app" }).first();
+    await expect(app).toHaveAttribute("rel", "noopener noreferrer");
+  });
+
   test("Una URL inexistente muestra la página 404 en español y no se indexa", async ({ page }) => {
     await page.goto("/productos/no-existe-este-producto");
     await expect(page.getByRole("heading", { name: "No encontramos esta página" })).toBeVisible();
