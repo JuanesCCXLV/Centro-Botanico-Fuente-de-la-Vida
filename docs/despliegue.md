@@ -83,6 +83,8 @@ En `DIRECT_URL` y `DATABASE_URL`, pega solo la URL de PostgreSQL que entrega Neo
 
 5. **Deploy.** Si Prisma muestra `P1013` en `prisma migrate deploy`, revisa primero `DIRECT_URL`: Prisma usa esa URL para aplicar las migraciones antes de ejecutar `next build`. Después de corregir las variables, inicia un nuevo despliegue para verificar el cambio.
 
+Netlify revisa que ningún valor de las variables aparezca en el código compilado. `netlify.toml` excluye `CLOUDINARY_CLOUD_NAME` de esa revisión porque no es secreto (va en cada URL de imagen). **No marques las demás variables como no secretas.**
+
 **Diferencias con Vercel que ya resuelve el código:**
 
 - Netlify solo expone `CONTEXT` y `DEPLOY_PRIME_URL` durante el build. `next.config.ts` calcula la URL del sitio, el entorno y la plataforma al compilar y los deja fijos (`src/lib/url-sitio.ts`). Por eso, **después de cambiar `SITE_URL` hay que volver a desplegar.**
