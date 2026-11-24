@@ -85,6 +85,8 @@ En `DIRECT_URL` y `DATABASE_URL`, pega solo la URL de PostgreSQL que entrega Neo
 
 Netlify revisa que ningún valor de las variables aparezca en el código compilado. `netlify.toml` excluye `CLOUDINARY_CLOUD_NAME` de esa revisión porque no es secreto (va en cada URL de imagen). **No marques las demás variables como no secretas.**
 
+**Cambiar una variable:** Netlify solo la aplica en el siguiente despliegue. Para volver a desplegar sin cambiar código, usa la flecha junto a **Publish** o crea un *build hook* (**Build and deploy → Build hooks → Add build hook**, rama `main`) y ejecútalo con `curl -X POST -d {} "<URL del hook>"`. Guarda esa URL en el gestor de contraseñas: quien la tenga puede lanzar despliegues. En Cloudinary, el valor de `CLOUDINARY_CLOUD_NAME` es el que aparece como **Cloud name** junto al título *API Keys*, no el nombre de la clave («Root»).
+
 **Diferencias con Vercel que ya resuelve el código:**
 
 - Netlify solo expone `CONTEXT` y `DEPLOY_PRIME_URL` durante el build. `next.config.ts` calcula la URL del sitio, el entorno y la plataforma al compilar y los deja fijos (`src/lib/url-sitio.ts`). Por eso, **después de cambiar `SITE_URL` hay que volver a desplegar.**
